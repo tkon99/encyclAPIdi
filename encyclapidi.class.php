@@ -8,7 +8,6 @@ class encyclapidi{
 			throw new Exception('Encyclo is down, or not accepting requests on: "'.$this->api_base.'", stopping script.');
 			exit();
 		}
-		echo json_encode($this->getWord('test'));
 	}
 
 	public function getWord($word = false, $strip = false){
@@ -21,6 +20,11 @@ class encyclapidi{
 			if(array_key_exists("resultaten", $raw)){
 				//word found
 				$results = $raw["resultaten"];
+				if($strip !== false){
+					for($i = 0; $i < sizeof($results); $i++){
+						$results[$i]["betekenis"] = strip_tags($results[$i]["betekenis"]);
+					}
+				}
 			}else{
 				//word not found
 				if(array_key_exists("welindedatabase", $raw)){

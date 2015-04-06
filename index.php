@@ -1,5 +1,7 @@
 <?php
 include('encyclapidi.class.php');
 $encyclo = new encyclapidi();
-//demo comming soon
+
+//Gives JSON encoded response without html tags
+echo json_encode($encyclo->getWord('test', true));
 ?>
