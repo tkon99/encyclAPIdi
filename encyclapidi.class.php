@@ -1,7 +1,8 @@
 <?php
 class encyclapidi{
 	private $api_base = "http://www.encyclo.nl/app/zoek2.php?woord=";
-	private $api_device = "Mozilla/4.0 (compatible; MSIE 5.01; Windows NT 5.0)";
+	private $suggest_base = "http://www.encyclo.nl/autoComplete/rpc.php";
+	private $device = "Mozilla/4.0 (compatible; MSIE 5.01; Windows NT 5.0)";
 
 	public function __construct(){
 		if($this->get('test') == false){
@@ -50,9 +51,48 @@ class encyclapidi{
 		}
 	}
 
+	public function suggest($word = false){
+		if($word == false){
+			throw new Exception('function suggest() needs a word as parameter.');
+		}else{
+			$url = $this->suggest_base;
+			$device = $this->device;
+
+			$ch = curl_init();
+			curl_setopt($ch, CURLOPT_URL,$url);
+			curl_setopt($ch, CURLOPT_POST, true);
+			curl_setopt($ch, CURLOPT_POSTFIELDS, "woord=".urlencode($word));
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+			curl_setopt($ch, CURLOPT_USERAGENT, $device);
+			$resp = curl_exec ($ch);
+
+			$httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+			 
+			curl_close($ch);
+
+			if($httpcode>=200 && $httpcode<300){
+				//Success
+				$return = array();
+
+				$items = explode("<span>", $resp);
+				for($i = 0; $i < count($items); $i++){
+					$items[$i] = str_replace("</span>", "", $items[$i]);
+					preg_match("/<a (?:.+)>(.+)<font(?:.+)>\((.+)x\)<\/font><\/a>/", $items[$i], $match);
+					if($match[1] !== null){
+						$return[] = array("word"=>trim($match[1]), "count"=>trim($match[2]));
+					}
+				}
+
+				return $return;
+			}else{
+				return false;
+			}
+		}
+	}
+
 	private function get($param = ''){
 		$getUrl = $this->api_base.$param;
-		$device = $this->api_device;
+		$device = $this->device;
 
 		$curl = curl_init();
 		curl_setopt_array($curl, array(
