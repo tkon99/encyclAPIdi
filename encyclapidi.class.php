@@ -26,6 +26,7 @@ class encyclapidi{
 						$results[$i]["betekenis"] = strip_tags($results[$i]["betekenis"]);
 					}
 				}
+				$suggestions = $this->suggest($word, true);
 			}else{
 				//word not found
 				if(array_key_exists("welindedatabase", $raw)){
@@ -37,21 +38,23 @@ class encyclapidi{
 							}
 						}
 					}else{
-						//no suggestions
+						//no suggestions, try suggestions engine
+						$suggestions = $this->suggest($word, true);
 					}
 				}else{
-					//no suggestions
+					//no suggestions, try suggestions engine
+					$suggestions = $this->suggest($word, true);
 				}
 			}
 			$return = array();
 			$return["results"] = $results;
-			$return["suggestions"] = $suggestions;
+			$return["suggest"] = $suggestions;
 
 			return $return;
 		}
 	}
 
-	public function suggest($word = false){
+	public function suggest($word = false, $ignoreword = true){
 		if($word == false){
 			throw new Exception('function suggest() needs a word as parameter.');
 		}else{
@@ -79,7 +82,13 @@ class encyclapidi{
 					$items[$i] = str_replace("</span>", "", $items[$i]);
 					preg_match("/<a (?:.+)>(.+)<font(?:.+)>\((.+)x\)<\/font><\/a>/", $items[$i], $match);
 					if($match[1] !== null){
-						$return[] = array("word"=>trim($match[1]), "count"=>trim($match[2]));
+						if($ignoreword == true){
+							if(strtolower(trim($match[1])) !== strtolower(trim($word))){
+								$return[] = trim($match[1]);
+							}
+						}else{
+							$return[] = trim($match[1]);
+						}
 					}
 				}
 
